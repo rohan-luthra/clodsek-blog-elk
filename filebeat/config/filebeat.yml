@@ -1,0 +1,32 @@
+filebeat.inputs:
+  - type: log
+    paths:
+      - '/usr/share/dockerlogs/data/*/*.log'
+    exclude_lines: ['^DBG', '\.gz$']
+    include_lines: [ '(?i)INFO', '(?i)DEBUG', '(?i)ERR','(?i)WARN']
+    tags: ["docker", "json"]
+    ignore_older: 1h
+  - type: log
+    paths:
+      - '/usr/share/nginxlogs/data/*.log'
+    tags: ["nginx", "json"]
+    ignore_older: 1h
+processors:
+  - add_docker_metadata:
+      host: "unix:///var/run/docker.sock"
+  - decode_json_fields:
+      fields: ["message", "log"]
+      target: "message_json"
+      overwrite_keys: true
+output.kafka:
+  hosts: ["broker:29092"]
+  topic: 'logs'
+  partition.round_robin:
+    reachable_only: false
+  required_acks: 1
+  compression: gzip
+  max_message_bytes: 1000000
+
+# to enable filebeats logs
+logging.json: true
+logging.metrics.enabled: false

@@ -1,0 +1,24 @@
+version: '3'
+services:       
+  filebeat:
+    container_name: filebeat
+    build:
+      context: filebeat
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - ./filebeat/dockerlogs:/usr/share/filebeat/dockerlogs/data:rw
+      - ./filebeat/nginxlogs:/usr/share/filebeat/nginxlogs/data:rw
+      - /var/lib/docker/containers:/usr/share/dockerlogs/data:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/log/nginx:/usr/share/nginxlogs/data:ro
+
+    ports:
+      - "5004:5000"
+
+    networks:
+      - elk
+      
+networks:
+  elk:
+     driver: bridge
